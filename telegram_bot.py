@@ -6,12 +6,15 @@
 import logging
 from telegram import __version__ as TG_VER
 import whisper
+import openai  # New version of whisper available on openai
+
 import os
 import toml
 from telegram import ReplyKeyboardRemove, Update
-import openai
 TOKEN=toml.load('./secrets.toml')['TELEGRAM_API_KEY']
-openai.api_key = toml.load('./secrets.toml')['OPENAI_API_KEY']#os.getenv("OPENAI_API_KEY")
+
+
+
 
 import nlp
 # from nlp import process_text

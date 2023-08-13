@@ -1,3 +1,4 @@
+secrets.toml
 ./secrets.toml
 .DS_Store
 output/
