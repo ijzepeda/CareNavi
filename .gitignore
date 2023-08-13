@@ -12,3 +12,4 @@ steps.txt
 *.ogg
 *.m4a
 *.pdf
+secrets.toml
