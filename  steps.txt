@@ -1,0 +1,27 @@
+conda install -c conda-forge moviepy
+conda install -c conda-forge python-sounddevice
+conda install -c conda-forge wavio
+
+conda install -c bricew soundfile
+brew install ffmpeg
+pip install git+https://github.com/openai/whisper.git -q
+https://platform.openai.com/docs/introduction
+streamlit run app.py
+http://localhost:8501/
+conda install -c conda-forge fpdf
+conda install -c conda-forge python-telegram-bot
+
+ponerle 5 botones, de los idiomas, para que el resumen lo haga automatico con traduccion. se guarde en dispositivo
+tambien, guardar sesion para que no repita la misma tarea para el mismo usuario
+se puede colocar un password inicial para que no lo usen foraneos
+
+
+
+!apt-get install python-pyaudio
+!apt-get install portaudio19-dev
+
+
+PyAudio
+
+moviepy
+python-telegram-bot
