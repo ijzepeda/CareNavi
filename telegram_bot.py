@@ -13,6 +13,7 @@ import toml
 from telegram import ReplyKeyboardRemove, Update
 TOKEN=toml.load('./secrets.toml')['TELEGRAM_API_KEY']
 
+from utils import save_pdf
 
 
 
@@ -71,9 +72,26 @@ def get_transcript(audio_file):
     return out['text']  
 
 
-def get_diagnotic(text):
-    """get_diagnotic() Receives the text from the user. and it will process all information"""
-    diagnosis = nlp.process_text(text)
+def get_diagnotic_and_details(text):
+    """get_diagnotic_and_details() Receives the text from the user. and it will process all information"""
+    
+    ###################
+    # I need to process the text twice at least, first, to extract user details.
+    # If possible delete that information.
+    # Second run: get the symptoms
+    ###################
+    # User_DETAILS
+    txt_user_data = nlp.extract_user_details(text)
+    #Symptoms
+    txt_disease_details={
+    'disease': 'Drug Reaction',
+    'description': 'An adverse drug reaction (ADR) is an injury caused by taking medication. ADRs may occur following a single dose or prolonged administration of a drug or result from the combination of two or more drugs.',
+    'treatment': 'stop irritation',
+    'treatments': 'consult nearest hospital. stop taking drug. follow up'}
+
+    # combine txt_user_data and txt_disease_details in one dictionary
+    diagnosis = {**txt_user_data, **txt_disease_details}
+
     return diagnosis
 
 ##############
@@ -85,10 +103,10 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
    
     await update.message.reply_text(
         f"Hello! This is a {BOTNAME}. \n Your Medical and Care Navigator.\n"
-        f"I will understand your illness and provide a treatment\n",
-        f"While you reach out for professional medical help.\n",
-        f"Start with your Name, age, weight heigh. Then Give me all your symptoms.",
-        "Start sending a Voice Note, or a Text",
+        f"I will understand your illness and provide a treatment\n"
+        f"While you reach out for professional medical help.\n"
+        f"Start with your Name, age, weight heigh.\n Followed up by all your symptoms."
+        "Start sending a Voice Note, or a Text"
     )
     # return AUDIO
 
@@ -101,12 +119,36 @@ async def text(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
         "Oh! I understand, let me think....."
     )
 
-    diagnostics = get_diagnotic(text)
+    # FIRST SCAN TO GET USER DETAILS
+                                    # user_details = {
+                                    #     "name": None,
+                                    #     "age": None,
+                                    #     "height": None,
+                                    #     "weight": None,
+                                    #     "bmi":None,
+                                    # "disease":result['Disease'].iloc[0],
+                                    # "description":result['Description'].iloc[0],
+                                    # "treatment":result['Precaution_1'].iloc[0],
+                                    # "treatments":". ".join([result[pre].iloc[0].capitalize() for pre in precautions]),
+                                    # }
+    # SECOND SCAN TO GET ALL SYMPTOMS. Everything happens in that function
+    user_diagnostics = get_diagnotic_and_details(text)
+
+
 
     await update.message.reply_text(
-        f"This is your diagnostics:\n",
-        f"{diagnostics}",
+        f"This is your diagnostic:\n"
+        f"{user_diagnostics['disease']}"
     )
+
+    print(user_diagnostics)
+    pdf_path = save_pdf(user_diagnostics)
+
+    with open(pdf_path, 'rb') as pdf_file:
+        await update.message.reply_document(pdf_file)
+
+
+
 
 async def voice(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     """VOICE is a voicenote, using the microphone directly."""
@@ -128,17 +170,20 @@ async def voice(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
 
     await audio_file.download_to_drive(audio_path)
     logger.info("Audio of %s: %s", user.first_name, "user_voice.ogg")
-    await update.message.reply_text(
-        "Working on it..."
-    )
+    
     x=  get_transcript(audio_path)
     await update.message.reply_text(
         "Transcript:\n"+x
     )   
-    y=  get_diagnotic(x)
+    y=  get_diagnotic_and_details(x)
     await update.message.reply_text(
         "Your Diagnostic:\n"+y
     )  
+
+
+
+
+
 
 async def audio(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     """AUDIO will receive an audio file from the device."""
@@ -162,7 +207,7 @@ async def audio(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     await update.message.reply_text(
         "Transcript:\n"+x
     )   
-    y=  get_diagnotic(x)
+    y=  get_diagnotic_and_details(x)
     await update.message.reply_text(
         "Summary:\n"+y
     )  
@@ -178,25 +223,53 @@ async def cancel(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
 
     return ConversationHandler.END
 
+# Create the error handler function
+async def error_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    """Log the error."""
+    logging.error(msg="Exception occurred", exc_info=context.error)
+    await update.message.reply_text(
+        f"{BOTNAME} is sick as well. There was an error. Please try again.", reply_markup=ReplyKeyboardRemove()
+    )
+
 
 def main() -> None:
     """Start the amazing CareNavi bot."""
     application = Application.builder().token(TOKEN).build()
-    conv_handler = ConversationHandler(
-        entry_points=[CommandHandler("start", start)],
-        states={
-        AUDIO: [
-        MessageHandler(filters.VOICE, voice),
-        MessageHandler(filters.AUDIO, audio),
-        MessageHandler(filters.TEXT, text)
-                    ], 
+    print(f">>>>> {BOTNAME} IS ALIVE <<<<<<<<<<<<<<<<")
 
+    # conv_handler = ConversationHandler(
+    #     entry_points=[CommandHandler("start", start)],
+    #     states={
+    #     AUDIO: [
+    #     MessageHandler(filters.VOICE, voice),
+    #     MessageHandler(filters.AUDIO, audio),
+    #     MessageHandler(filters.TEXT, text)
+    #                 ], 
+    #     },
+    #     fallbacks=[CommandHandler("cancel", cancel)],
+    # )
+
+    conv_handler = ConversationHandler(
+        entry_points=[CommandHandler("start", start),
+                      ],
+        states={ 
         },
         fallbacks=[CommandHandler("cancel", cancel)],
     )
 
+    # Add the error handler
+    application.add_error_handler(error_handler)
+    application.add_handler(conv_handler)
+
+    application.add_handler(MessageHandler(filters.VOICE, voice))
+    application.add_handler(MessageHandler(filters.TEXT, text))
+    application.add_handler(MessageHandler(filters.AUDIO, audio))
+
+    
     application.add_handler(conv_handler)
     application.run_polling()
+
+
 
 
 if __name__ == "__main__":
