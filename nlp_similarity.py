@@ -37,6 +37,12 @@ df_complete = pd.merge(df_symptoms,df_diseases, on='Disease')
 df_complete = pd.merge(df_complete,df_precautions, on='Disease')
 
 
+df_complete['Precaution_1']=df_complete['Precaution_1'].astype(str)
+df_complete['Precaution_2']=df_complete['Precaution_2'].astype(str)
+df_complete['Precaution_3']=df_complete['Precaution_3'].astype(str)
+df_complete['Precaution_4']=df_complete['Precaution_4'].astype(str)
+
+
 
 
 def preprocess(text):
@@ -45,19 +51,12 @@ def preprocess(text):
     clean_text = ' '.join([word.lower() for word in lemmatized if word.lower() not in stop_words and word.isalpha()])
     return clean_text
 
-
 def cleaning_process(df,syms='symptoms',des='description'):
-
+    # I forgot the reason behind syms and des
     df = df.drop_duplicates()
     df = df.fillna("")
     df['processed_symptoms'] = df[syms].apply(preprocess)
     df['processed_description'] = df[des].apply(preprocess)
-
-    # tfidf_vectorizer = TfidfVectorizer()
-    # tfidf_matrix_symptoms = tfidf_vectorizer.fit_transform(df['processed_symptoms'])
-    # tfidf_matrix_description = tfidf_vectorizer.fit_transform(df['processed_description'])
-    # print(tfidf_matrix_symptoms)
-    # print(tfidf_matrix_description)
     return df
 
 
@@ -65,15 +64,20 @@ def cleaning_process(df,syms='symptoms',des='description'):
 # Obtaining column names for 17 symptoms columns
 sym_cols=[]
 for i in range(1,18):
-    sym_cols.append('Symptom_'+str(i))
-    
+    sym_cols.append('Symptom_'+str(i))    
 df_complete['Symptoms_All'] = df_complete[sym_cols].apply(lambda row: ', '.join(row), axis=1)
-print(df_complete.shape)
-df_complete.head(2)
 
 
-columns_of_interest=['Disease','Symptoms_All','Description'] #for training
+#Obtaining columns for precautions, merge last 3 into one
+prec_cols=[]
+for i in range(2,4):
+    prec_cols.append('Precaution_'+str(i))    
+df_complete['Precautions'] = df_complete[prec_cols].apply(lambda row: ', '.join(row), axis=1)
 
+
+
+
+columns_of_interest=['Disease','Symptoms_All','Description',"Precaution_1",'Precautions'] #for training
 _df=cleaning_process(df_complete[columns_of_interest],'Symptoms_All','Description')
 
 
@@ -176,20 +180,22 @@ import pickle
 DOCS_DATABASE_ROOT = "./models/DISEASES_v2"
 
 dataset_docs=[]
+tic=time.time()
 if not os.path.exists(DOCS_DATABASE_ROOT):
     print("This DISEASES database has not been processed, creating NLP docs...")
     os.makedirs(DOCS_DATABASE_ROOT)
     # To avoid too much disk space
-    tic=time.time()
+    
     dataset_docs = [nlp(record) for record in _df['processed_description'].tolist()]
-    print(f"{len(dataset_docs)} docs . Took {(time.time()-tic)} secs to process") # 89 docs on 26.4 secs
     # save dataset_docs in pickle
     with open(DOCS_DATABASE_ROOT+'/dataset_disease_docs.pkl', 'wb') as f:
         pickle.dump(dataset_docs, f)
+    print(f"{len(dataset_docs)} docs . Took {(time.time()-tic)} secs to process") # 89 docs on 26.4 secs
+
 else:
     with open(DOCS_DATABASE_ROOT+'/dataset_disease_docs.pkl', 'rb') as f:
         dataset_docs = pickle.load(f)
-    print(f"{len(dataset_docs)} docs . Took {(time.time()-tic)} secs to process")
+    print(f"{len(dataset_docs)} docs . Took {(time.time()-tic)} secs to load")
 
     
     
@@ -210,7 +216,7 @@ if not os.path.exists(DOCS_DATABASE_ROOT_SYMS):
 else:
     with open(DOCS_DATABASE_ROOT_SYMS+'/dataset_symptoms_docs.pkl', 'rb') as f:
         dataset__syms_docs = pickle.load(f)
-    print(f"{len(dataset__syms_docs)} docs . Took {(time.time()-tic)} secs to process")
+    print(f"{len(dataset__syms_docs)} docs . Took {(time.time()-tic)} secs to load")
 
     
     
@@ -233,18 +239,12 @@ def find_similar_disease(_synopsis, dataset_docs="disease"):
   
     df_match = _df.iloc[most_similar_index]#[df['']]
 
-    #Return this format
-     # txt_disease_details={
-        # 'disease': 'Drug Reaction',
-        # 'description': 'An adverse drug reaction (ADR) is an injury caused by taking medication. ADRs may occur following a single dose or prolonged administration of a drug or result from the combination of two or more drugs.',
-        # 'treatment': 'stop irritation',
-        # 'treatments': 'consult nearest hospital. stop taking drug. follow up'}
     # DF_MATCH:Disease,Symptoms_All,Description,processed_symptoms,processed_description
     txt_disease_details={
         'disease': df_match['Disease'],
         'description': df_match['Description'],
-        'treatment': df_match[''],
-        'treatments': df_match['']
+        'treatment': df_match['Precaution_1'],
+        'treatments': df_match['Precautions']
     }
 
 

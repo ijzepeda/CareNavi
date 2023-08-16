@@ -13,7 +13,7 @@ import toml
 from telegram import ReplyKeyboardRemove, Update
 TOKEN=toml.load('./secrets.toml')['TELEGRAM_API_KEY']
 
-from utils import save_pdf
+from to_pdf import save_pdf
 
 
 import nlp_similarity
@@ -85,17 +85,13 @@ def get_diagnotic_and_details(text):
     txt_user_data = nlp.extract_user_details(text)
     #TODO: this is the part to fill the disease!
 
-    #Step1: SPlit main_text into User, and symptoms, or iterate.
+    #Step1: ()SPlit main_text into User, and symptoms, or iterate.
+
+
     sintomas_texto="I've been experiencing severe headaches, often accompanied by visual disturbances and sensitivity to light."
-    #Step2: Send symp_text to nlp_similarity and receive a dictionary
+    #Step2: (Symptoms)Send symp_text to nlp_similarity and receive a dictionary
     txt_disease_details=nlp_similarity.find_similar_disease(sintomas_texto,"symptoms")
 
-    #Symptoms
-        # txt_disease_details={
-        # 'disease': 'Drug Reaction',
-        # 'description': 'An adverse drug reaction (ADR) is an injury caused by taking medication. ADRs may occur following a single dose or prolonged administration of a drug or result from the combination of two or more drugs.',
-        # 'treatment': 'stop irritation',
-        # 'treatments': 'consult nearest hospital. stop taking drug. follow up'}
 
     # combine txt_user_data and txt_disease_details in one dictionary
     diagnosis = {**txt_user_data, **txt_disease_details}
@@ -155,6 +151,9 @@ async def text(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
         with open(pdf_path, 'rb') as pdf_file:
             await update.message.reply_document(pdf_file)
 
+    await update.message.reply_text(
+        f"That's gonna be $20,000!"
+    )
 
 
 

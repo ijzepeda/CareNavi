@@ -17,3 +17,5 @@ secrets.toml
 __pycache__/nlp.cpython-39.pyc
 __pycache__/*
 __pycache__/
+models/*
+*.pkl

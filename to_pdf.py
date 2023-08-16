@@ -4,26 +4,34 @@ import datetime
 
 
 t = datetime.datetime.today()
-D =  t.strftime('%d/%m/%y')
+D =  t.strftime('%d %M, %y')
 D_file =  t.strftime('%d-%m-%y_%H%M%S')
 pdf_folder="./pdfs"
+logo_path="./resources/doctor_1.png"
 # if folder doesn't exist create it
 if not os.path.exists(pdf_folder):
     os.makedirs(pdf_folder)
 
 
-def all_values_empty_or_none(dictionary):
+def is_not_valid_data(dictionary):
     for value in dictionary.values():
         if value is not None and value:
             return False
     return True
 
 def save_pdf(user): 
-    if(not all_values_empty_or_none(user)):
+    if(user['disease']==None):
         return None
     pdf = FPDF() 
     pdf.add_page()
     font="Arial" 
+
+    pdf.set_font(font,"B", size = 40)
+    pdf.cell(0, 10, txt="FakeDoctors & Co.", ln=True, align='C')
+    pdf.set_font(font,"B", size = 10)
+    pdf.cell(0, 10, txt="by CareNavi", ln=False, align='C')
+    pdf.image(logo_path, x = 5, y = 4, w = 25)
+    pdf.ln(25)
 
     pdf.set_font(font,"B", size = 20)
     pdf.cell(0, 10, txt = f"Diagnostic {user['name']}", align = 'C') #Title
