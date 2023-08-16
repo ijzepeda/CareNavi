@@ -12,9 +12,15 @@ if not os.path.exists(pdf_folder):
     os.makedirs(pdf_folder)
 
 
-
+def all_values_empty_or_none(dictionary):
+    for value in dictionary.values():
+        if value is not None and value:
+            return False
+    return True
 
 def save_pdf(user): 
+    if(not all_values_empty_or_none(user)):
+        return None
     pdf = FPDF() 
     pdf.add_page()
     font="Arial" 
