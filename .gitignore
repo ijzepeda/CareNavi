@@ -2,7 +2,6 @@ secrets.toml
 ./secrets.toml
 .DS_Store
 output/
-resources/
 temp/
 user_data/
 pdf/
