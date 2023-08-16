@@ -73,7 +73,7 @@ def get_transcript(audio_file):
     return out['text']  
 
 
-def get_diagnotic_and_details(text):
+def get_diagnotic_and_details(full_text):
     """get_diagnotic_and_details() Receives the text from the user. and it will process all information"""
     
     ###################
@@ -81,22 +81,20 @@ def get_diagnotic_and_details(text):
     # If possible delete that information.
     # Second run: get the symptoms
     ###################
-    # User_DETAILS
-    txt_user_data = nlp.extract_user_details(text)
-    #TODO: this is the part to fill the disease!
-
     #Step1: ()SPlit main_text into User, and symptoms, or iterate.
+    user_text , symptoms_text = nlp.split_text_content(full_text)
 
+    # Step2: User_DETAILS
+    txt_user_data = nlp.extract_user_details(user_text)
 
-    sintomas_texto="I've been experiencing severe headaches, often accompanied by visual disturbances and sensitivity to light."
-    #Step2: (Symptoms)Send symp_text to nlp_similarity and receive a dictionary
-    txt_disease_details=nlp_similarity.find_similar_disease(sintomas_texto,"symptoms")
-
+    #Step3: (Symptoms)Send symp_text to nlp_similarity and receive a dictionary
+    txt_disease_details=nlp_similarity.find_similar_disease(symptoms_text,"symptoms")
 
     # combine txt_user_data and txt_disease_details in one dictionary
     diagnosis = {**txt_user_data, **txt_disease_details}
 
     return diagnosis
+
 
 ##############
 ### COMMANDS
@@ -117,28 +115,14 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
 async def text(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     """This function will recive the text from any other part and send it to process"""
     user = update.message.from_user
-    text = update.message.text
-    logger.info("Text of %s: %s", user.first_name, text)
+    full_text = update.message.text
+    logger.info("Text of %s: %s", user.first_name, full_text)
     await update.message.reply_text(
         "Oh! I understand, let me think....."
     )
 
-    # FIRST SCAN TO GET USER DETAILS
-                                    # user_details = {
-                                    #     "name": None,
-                                    #     "age": None,
-                                    #     "height": None,
-                                    #     "weight": None,
-                                    #     "bmi":None,
-                                    # "disease":result['Disease'].iloc[0],
-                                    # "description":result['Description'].iloc[0],
-                                    # "treatment":result['Precaution_1'].iloc[0],
-                                    # "treatments":". ".join([result[pre].iloc[0].capitalize() for pre in precautions]),
-                                    # }
     # SECOND SCAN TO GET ALL SYMPTOMS. Everything happens in that function
-    user_diagnostics = get_diagnotic_and_details(text)
-
-
+    user_diagnostics = get_diagnotic_and_details(full_text)
 
     await update.message.reply_text(
         f"This is your diagnostic:\n"
