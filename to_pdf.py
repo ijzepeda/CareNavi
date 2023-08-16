@@ -4,7 +4,7 @@ import datetime
 
 
 t = datetime.datetime.today()
-D =  t.strftime('%d %M, %y')
+D =  t.strftime('%B %d, %y')
 D_file =  t.strftime('%d-%m-%y_%H%M%S')
 pdf_folder="./pdfs"
 logo_path="./resources/doctor_1.png"
