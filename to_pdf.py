@@ -8,6 +8,8 @@ D =  t.strftime('%B %d, %y')
 D_file =  t.strftime('%d-%m-%y_%H%M%S')
 pdf_folder="./pdfs"
 logo_path="./resources/doctor_1.png"
+logo2_path="./resources/carenavi_logo.jpeg"
+
 # if folder doesn't exist create it
 if not os.path.exists(pdf_folder):
     os.makedirs(pdf_folder)
@@ -33,12 +35,16 @@ def save_pdf(user):
     pdf = FPDF() 
     pdf.add_page()
     font="Arial" 
+    page_width = pdf.w
+    logo2_width = 25  
+    x_coordinate = page_width - logo2_width - 5  
 
     pdf.set_font(font,"B", size = 40)
     pdf.cell(0, 10, txt="FakeDoctors & Co.", ln=True, align='C')
     pdf.set_font(font,"B", size = 10)
     pdf.cell(0, 10, txt="by CareNavi", ln=False, align='C')
     pdf.image(logo_path, x = 5, y = 4, w = 25)
+    pdf.image(logo2_path, x=x_coordinate, y=4, w=25)
     pdf.ln(25)
 
     pdf.set_font(font,"B", size = 20)
