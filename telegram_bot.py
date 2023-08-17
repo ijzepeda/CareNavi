@@ -104,10 +104,10 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     """Starts the conversation and asks the user to send a voicenote."""
    
     await update.message.reply_text(
-        f"Hello! This is a {BOTNAME}. \nYour Medical and Care Navigator.\n"
+        f"Hello! This is a {BOTNAME}, Your Medical and Care Navigator.\n"
         f"I will understand your illness and provide a treatment\n"
-        f"While you reach out for professional medical help.\n"
-        f"Start with your Name, age, weight, and heigh.\nFollowed up by all your symptoms."
+        f"Meanwhile try to reach out for professional medical help.\n"
+        f"Start with your Name, age, weight, and heigh.\nFollowed up by all your symptoms.\n"
         "Start sending a Voice-Note, or a Text"
     )
     # return AUDIO
