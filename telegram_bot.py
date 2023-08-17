@@ -166,10 +166,27 @@ async def voice(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     await update.message.reply_text(
         "Transcript:\n"+x
     )   
-    y=  get_diagnotic_and_details(x)
+
+
+    user_diagnostics=  get_diagnotic_and_details(x)
+    
     await update.message.reply_text(
-        "Your Diagnostic:\n"+y
-    )  
+        f"This is your diagnostic:\n"
+        f"{user_diagnostics['disease']}"
+    )
+
+    print(user_diagnostics)
+    pdf_path = save_pdf(user_diagnostics)
+    if(pdf_path!=None):
+        with open(pdf_path, 'rb') as pdf_file:
+            await update.message.reply_document(pdf_file)
+    else:
+        await update.message.reply_text(
+        f"Sorry, I couldn't deliver your PDF"
+    )
+    await update.message.reply_text(
+        f"That's gonna be $20,000!"
+    )
 
 
 

@@ -20,6 +20,14 @@ def is_not_valid_data(dictionary):
     return True
 
 def save_pdf(user): 
+
+    # print all items and data types of user
+    for k,v in user.items():
+        if(type(v)==str):
+            user[k]= v.encode("latin-1", "replace").decode("latin-1")
+        # print(k, type(v))
+
+
     if(user['disease']==None):
         return None
     pdf = FPDF() 
@@ -97,7 +105,7 @@ def save_pdf(user):
     if not os.path.exists(pdf_folder):
         os.makedirs(pdf_folder)
     pdf_path=os.path.join(pdf_folder,f"Diagnostic-{user['name']}-{D_file}.pdf")
-    pdf.output(pdf_path,'F')#.encode('latin-1','ignore') 
+    pdf.output(pdf_path,'F')#.encode('latin-1','ignore').decode('latin-1') 
     print("PDF SAVED AT", pdf_path)
     return pdf_path
  

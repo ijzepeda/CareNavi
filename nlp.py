@@ -1,6 +1,6 @@
 import spacy
 import nltk
-
+import re
 
 
 nlp_entities = spacy.load('en_core_web_sm') 
@@ -16,7 +16,7 @@ def extract_entities(text, lan_model="en_core_web_sm"):
 def extract_user_details(txt_user_data):
     def calculate_bmi(weight, height):
         """Calculate BMI (kg) and (m)"""
-        return weight / (height ** 2)
+        return float(weight / (height ** 2))
     def feet_to_meters(feet):
         return feet * 0.3048
     def pounds_to_kilograms(pounds):
@@ -26,42 +26,46 @@ def extract_user_details(txt_user_data):
 
     # Initialize an empty dictionary to store user details
     user_details = {
-        "name": None,
-        "age": None,
-        "height": None,
-        "weight": None,
-        "bmi":None
+        "name": "",
+        "age": 0,
+        "height": 0,
+        "weight": 0,
+        "bmi":0
     }
 
     print(entities)
     # Iterate through extracted entities to find user details
     for entity, label in entities:
+        print(f"Entity:{entity}, {label}")
+        entity_value=re.sub(r'[^0-9.]', '',entity.split()[0])
+        if(entity_value==""):
+            entity_value=0
         if label == "PERSON":
             user_details["name"] = entity
         elif label == "DATE":
-            if ("years" in entity or "y.o." in entity):
-                user_details["age"] = int(entity.split()[0])
+            if ( entity in ["years","y.o.", "year", "yo."]):
+                user_details["age"] = int(entity_value)
         elif (label == "QUANTITY"):
             if ("feet" in entity or "ft." in entity):
-                user_details["height"] = feet_to_meters(float(entity.split()[0]))
-            elif ("meters" in entity or "mts." in entity):
-                user_details["height"] = float(entity.split()[0]) 
-            elif ("centimeter" in entity or "cm." in entity):
+                user_details["height"] = feet_to_meters(float(entity_value))
+            elif (entity in ["meters", "mts.", "meter"]):
+                user_details["height"] = float(entity_value)
+            elif (entity in ["centimeter","cm." , "centimeters", 'cms.']):
                 print("Is in centimeters",entity)
-                print((float(entity.split()[0]))/100, "meters")
-                user_details["height"] = (float(entity.split()[0]))/100
-            elif any(unit in entity for unit in ["kg", "pounds", "kilo"]):
+                print((float(entity_value))/100, "meters")
+                user_details["height"] = (float(entity_value))/100
+            elif any(unit in entity for unit in ["kg","kg.", "pounds", "kilo", 'kilogram','kilograms']):
                 if "pounds" in entity:
-                    user_details["weight"] = pounds_to_kilograms(float(entity.split()[0]))
+                    user_details["weight"] = pounds_to_kilograms(float(entity_value))
                 elif any(unit in entity for unit in ["kg", "kilo"]):
-                    user_details["weight"] = float(entity.split()[0])
+                    user_details["weight"] = float(entity_value)
         elif(label == "CARDINAL"):
             # If just caught a number without extra context.... 
             # Add it to all empty values? measure and guess its variable?
             for k,v in user_details.items():
-                if(user_details[k]==None):
-                    (float(entity.split()[0]))/100
-                    x=float(entity.split()[0])
+                if(user_details[k]==""):
+                    (float(entity_value))/100
+                    x=float(entity_value)
                     if (k == 'height' and x > 2):
                         user_details[k] = x/100 
                     elif (k == 'weight' and x > 160): # this is consideration of 160 and above as pounds
