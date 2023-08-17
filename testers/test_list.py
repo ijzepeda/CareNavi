@@ -137,7 +137,7 @@ found_symptoms=[]
 for _sym in list_symptoms:
     print(_sym)
     if(_sym  in _synopsis):
-        found_symptoms.append(_sym)
+        found_symptoms.append(_sym.capitalize())
 print(found_symptoms)
 
 user={
@@ -145,7 +145,7 @@ user={
         'description': "df_match['Description']",
         'treatment': "df_match['Precaution_1']",
         'treatments':" df_match['Precautions']",
-        'symptoms': (", ".join(found_symptoms))[:-1]
+        'symptoms': ", ".join(found_symptoms)
     }
 
 if(len(user['symptoms'])!=0):
