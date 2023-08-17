@@ -43,14 +43,14 @@ def extract_user_details(txt_user_data):
         if label == "PERSON":
             user_details["name"] = entity
         elif label == "DATE":
-            if ( entity in ["years","y.o.", "year", "yo."]):
+            if ( any(variation in entity for variation in ["years", "y.o.", "year", "yo."])):
                 user_details["age"] = int(entity_value)
         elif (label == "QUANTITY"):
             if ("feet" in entity or "ft." in entity):
                 user_details["height"] = feet_to_meters(float(entity_value))
-            elif (entity in ["meters", "mts.", "meter"]):
+            elif (any(variation in entity for variation in ["meters", "mts.", "meter"])):
                 user_details["height"] = float(entity_value)
-            elif (entity in ["centimeter","cm." , "centimeters", 'cms.']):
+            elif (any(variation in entity for variation in ["centimeter","cm." , "centimeters", 'cms.'])):
                 print("Is in centimeters",entity)
                 print((float(entity_value))/100, "meters")
                 user_details["height"] = (float(entity_value))/100
