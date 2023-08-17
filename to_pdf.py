@@ -106,7 +106,12 @@ def save_pdf(user):
     pdf.set_font(font, size=12)
     pdf.multi_cell(0, 10, txt =user['treatments'].capitalize())
     pdf.ln()
-    pdf.ln()
+    if(len(user['symptoms'])!=0):
+        pdf.set_font(font,"B", size = 15)
+        pdf.multi_cell(0, 10, txt = "Symptoms Found:\n")
+        pdf.set_font(font, size=12)
+        pdf.multi_cell(0, 10, txt =user['symptoms'])
+        pdf.ln()
     # if path doesn't exists create it
     if not os.path.exists(pdf_folder):
         os.makedirs(pdf_folder)
