@@ -176,14 +176,14 @@ async def voice(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
         # new_file.download(f"./{user_data}/voice_note.ogg")
         #2
         audio_file = await update.message.voice.get_file()
-        audio_path=f"./{user_data}/user_voice.ogg"
+        audio_path=f"./{user_data}/user_voice_{str(user)}.ogg"
         
         if not os.path.exists(os.path.join('./',(user_data))):
             print(f"Making a folder for {user_data}")
             os.makedirs(os.path.join('./',(user_data)))
 
         await audio_file.download_to_drive(audio_path)
-        logger.info("Audio of %s: %s", user.first_name, "user_voice.ogg")
+        logger.info("Audio of %s: %s", user.first_name, f"user_voice_{str(user)}.ogg")
         
         x=  get_transcript(audio_path)
         await update.message.reply_text(
@@ -226,14 +226,14 @@ async def audio(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     )
     user = update.message.from_user
     audio_file = await update.message.audio.get_file()
-    audio_path=f"./{user_data}/user_audio.ogg"
+    audio_path=f"./{user_data}/user_audio_{str(user)}.ogg"
     
     if not os.path.exists(os.path.join('./',(user_data))):
         print(f"Making a folder for {user_data}")
         os.makedirs(os.path.join('./',(user_data)))
 
     await audio_file.download_to_drive(audio_path)
-    logger.info("Audio of %s: %s", user.first_name, "user_audio.ogg")
+    logger.info("Audio of %s: %s", user.first_name, f"user_audio_{str(user)}.ogg")
     await update.message.reply_text(
         "Working on it..."
     )
