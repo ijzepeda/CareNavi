@@ -41,7 +41,7 @@ def extract_user_details(txt_user_data):
         if(entity_value==""):
             entity_value=0
         if label == "PERSON":
-            user_details["name"] = entity
+            user_details["name"] = str(entity).capitalize()
         elif label == "DATE":
             if ( any(variation in entity for variation in ["years", "y.o.", "year", "yo."])):
                 user_details["age"] = int(entity_value)

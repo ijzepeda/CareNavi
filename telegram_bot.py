@@ -7,7 +7,7 @@ import logging
 from telegram import __version__ as TG_VER
 import whisper
 import openai  # New version of whisper available on openai
-
+import time
 import os
 import toml
 from telegram import ReplyKeyboardRemove, Update
@@ -19,7 +19,11 @@ from to_pdf import save_pdf
 import nlp_similarity
 import nlp
 
-
+#user limitation
+LIMIT = 3
+TIME_PERIOD = 60  # seconds
+user_message_count = {}
+user_last_checked = {}
 
 try:
     from telegram import __version_info__
@@ -102,7 +106,12 @@ def get_diagnotic_and_details(full_text):
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     """Starts the conversation and asks the user to send a voicenote."""
-   
+    user_id = update.message.from_user.id
+    if(has_exceeded(user_id)):       
+        await update.message.reply_text(
+            "You have exceeded your requests, let me rest a minute."
+        )
+        return ""
     await update.message.reply_text(
         f"Hello! This is a {BOTNAME}, Your Medical and Care Navigator.\n"
         f"I will understand your illness and provide a treatment\n"
@@ -114,6 +123,13 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
 
 async def text(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     """This function will recive the text from any other part and send it to process"""
+    user_id = update.message.from_user.id
+    if(has_exceeded(user_id)):       
+        await update.message.reply_text(
+            "You have exceeded your requests, let me rest a minute."
+        )
+        return ""
+
     user = update.message.from_user
     full_text = update.message.text
     logger.info("Text of %s: %s", user.first_name, full_text)
@@ -143,58 +159,68 @@ async def text(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
 
 async def voice(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     """VOICE is a voicenote, using the microphone directly."""
-    await update.message.reply_text(
-        "I am listening to it, give me a second...."
-    )
-    user = update.message.from_user
-    #1
-    # audio_file = update.message.voice.file_id
-    # new_file = context.bot.get_file(update.message.voice.file_id)
-    # new_file.download(f"./{user_data}/voice_note.ogg")
-    #2
-    audio_file = await update.message.voice.get_file()
-    audio_path=f"./{user_data}/user_voice.ogg"
-    
-    if not os.path.exists(os.path.join('./',(user_data))):
-        print(f"Making a folder for {user_data}")
-        os.makedirs(os.path.join('./',(user_data)))
-
-    await audio_file.download_to_drive(audio_path)
-    logger.info("Audio of %s: %s", user.first_name, "user_voice.ogg")
-    
-    x=  get_transcript(audio_path)
-    await update.message.reply_text(
-        "Transcript:\n"+x
-    )   
-
-
-    user_diagnostics=  get_diagnotic_and_details(x)
-    
-    await update.message.reply_text(
-        f"This is your diagnostic:\n"
-        f"{user_diagnostics['disease']}"
-    )
-
-    print(user_diagnostics)
-    pdf_path = save_pdf(user_diagnostics)
-    if(pdf_path!=None):
-        with open(pdf_path, 'rb') as pdf_file:
-            await update.message.reply_document(pdf_file)
-    else:
+    user_id = update.message.from_user.id
+    if(has_exceeded(user_id)):       
         await update.message.reply_text(
-        f"Sorry, I couldn't deliver your PDF"
-    )
-    await update.message.reply_text(
-        f"That's gonna be $20,000!"
-    )
+            "You have exceeded your requests, let me rest a minute."
+        )
+    else:
+        
+        await update.message.reply_text(
+            "I am listening to it, give me a second...."
+        )
+        user = update.message.from_user
+        #1
+        # audio_file = update.message.voice.file_id
+        # new_file = context.bot.get_file(update.message.voice.file_id)
+        # new_file.download(f"./{user_data}/voice_note.ogg")
+        #2
+        audio_file = await update.message.voice.get_file()
+        audio_path=f"./{user_data}/user_voice.ogg"
+        
+        if not os.path.exists(os.path.join('./',(user_data))):
+            print(f"Making a folder for {user_data}")
+            os.makedirs(os.path.join('./',(user_data)))
+
+        await audio_file.download_to_drive(audio_path)
+        logger.info("Audio of %s: %s", user.first_name, "user_voice.ogg")
+        
+        x=  get_transcript(audio_path)
+        await update.message.reply_text(
+            "Transcript:\n"+x
+        )   
 
 
+        user_diagnostics=  get_diagnotic_and_details(x)
+        
+        await update.message.reply_text(
+            f"This is your diagnostic:\n"
+            f"{user_diagnostics['disease']}"
+        )
 
-
+        print(user_diagnostics)
+        pdf_path = save_pdf(user_diagnostics)
+        if(pdf_path!=None):
+            with open(pdf_path, 'rb') as pdf_file:
+                await update.message.reply_document(pdf_file)
+        else:
+            await update.message.reply_text(
+            f"Sorry, I couldn't deliver your PDF"
+        )
+        await update.message.reply_text(
+            f"That's gonna be $20,000!"
+        )
 
 
 async def audio(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     """AUDIO will receive an audio file from the device."""
+    user_id = update.message.from_user.id
+    if(has_exceeded(user_id)):       
+        await update.message.reply_text(
+            "You have exceeded your requests, let me rest a minute."
+        )
+        return ""
+
     await update.message.reply_text(
         "I am listening to it, give me a second...."
     )
@@ -219,6 +245,31 @@ async def audio(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     await update.message.reply_text(
         "Summary:\n"+y
     )  
+
+
+def has_exceeded(user_id):
+    current_time = time.time()
+    # Reset count for the user if they haven't sent a message in the TIME_PERIOD
+    if user_id not in user_last_checked or current_time - user_last_checked[user_id] > TIME_PERIOD:
+        user_message_count[user_id] = 0
+        user_last_checked[user_id] = current_time
+
+    # Check if user has exceeded the message limit
+    if user_message_count[user_id] < LIMIT:
+        user_message_count[user_id] += 1
+        return False
+    else:
+        # save the user_id on a txt file and append it
+        user_message_count[user_id] += 1
+        # Append user_id on user.txt
+        with open('users/abusive_user.txt','a') as f :
+            f.write("\n"+str(user_id)+"\n")
+        print(user_id,":",user_message_count[user_id])
+        return True
+
+
+
+
 
 
 async def cancel(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:

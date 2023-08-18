@@ -61,7 +61,7 @@ def save_pdf(user):
     pdf.set_font(font, "I", size=12)
     pdf.cell(20, 10, txt="Name:", ln=False)
     pdf.set_font(font, "IU", size=12)
-    pdf.cell(40, 10, txt=f"{user['name'].capitalize()}", ln=False)
+    pdf.cell(40, 10, txt=f"{user['name']}", ln=False)
     pdf.set_font(font, "I", size=12)
     pdf.cell(20, 10, txt="Age:", ln=False)
     pdf.set_font(font, "IU", size=12)
